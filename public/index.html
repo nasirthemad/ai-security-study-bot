@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security+ Study Bot</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-container">
+    <h1>Security+ Study Bot</h1>
+
+    <div class="top-bar">
+      <button id="clear-btn">Clear Chat</button>
+    </div>
+
+    <div class="mode-row">
+      <label for="mode-select">Mode:</label>
+      <select id="mode-select">
+        <option value="learn">Learn</option>
+        <option value="quiz">Quiz</option>
+        <option value="example">Example</option>
+        <option value="flashcards">Flashcards</option>
+      </select>
+    </div>
+
+    <div id="score-board" class="score-board hidden">
+      <div>Total: <span id="score-total">0</span></div>
+      <div>Correct: <span id="score-correct">0</span></div>
+      <div>Wrong: <span id="score-wrong">0</span></div>
+    </div>
+
+    <div id="quiz-panel" class="quiz-panel hidden">
+      <div class="quiz-panel-header">Active Quiz</div>
+      <div id="quiz-question" class="quiz-question">Your quiz question will appear here.</div>
+      <div id="quiz-answer-buttons" class="quiz-answer-buttons"></div>
+      <div id="quiz-feedback" class="quiz-feedback hidden"></div>
+    </div>
+
+    <div id="quiz-actions" class="quiz-actions hidden">
+      <button id="next-question-btn">Next Question</button>
+      <button id="show-explanation-btn">Show Explanation</button>
+    </div>
+
+    <div class="suggestions">
+      <button class="suggestion-btn" data-prompt="Explain this simply.">Explain Simply</button>
+      <button class="suggestion-btn" data-prompt="Quiz me on Security+.">Quiz Me</button>
+      <button class="suggestion-btn" data-prompt="Give me an example.">Give Example</button>
+      <button class="suggestion-btn" data-prompt="Go deeper on that.">Go Deeper</button>
+    </div>
+
+    <div id="chat-box" class="chat-box"></div>
+
+    <div class="input-area">
+      <input
+        type="text"
+        id="user-input"
+        placeholder="Ask a Security+ question..."
+      />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
