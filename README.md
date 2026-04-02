@@ -1,31 +1,45 @@
 # AI Security+ Study Bot
 
-An interactive AI-powered chatbot designed to help users study for the CompTIA Security+ exam.
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-Vue-42b883?style=for-the-badge&logo=vuedotjs" />
+  <img src="https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/Framework-Express-000000?style=for-the-badge&logo=express&logoColor=white" />
+  <img src="https://img.shields.io/badge/API-OpenAI-412991?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Storage-localStorage-2563eb?style=for-the-badge" />
+</p>
 
-## 🚀 Features
-- Learn mode (simple explanations)
-- Quiz mode with score tracking
-- Clickable answer buttons
-- Explanation system for quiz answers
-- Flashcards mode
-- Persistent chat + quiz memory using localStorage
+<p align="center">
+  <img src="https://img.shields.io/github/last-commit/YOUR_USERNAME/ai-security-study-bot?style=flat-square" />
+  <img src="https://img.shields.io/github/repo-size/YOUR_USERNAME/ai-security-study-bot?style=flat-square" />
+  <img src="https://img.shields.io/github/stars/YOUR_USERNAME/ai-security-study-bot?style=flat-square" />
+</p>
 
-## 🛠 Tech Stack
+## Overview
+An interactive AI-powered Security+ study app with:
+- Learn mode
+- Quiz mode with clickable answers
+- Flashcards
+- Explanations
+- Persistent quiz/chat memory
+
+## Features
+- Full-stack chatbot with Node.js + Express
+- Cyber-themed frontend
+- Quiz score tracking
+- Clickable answer choices
+- localStorage persistence
+- OpenAI-powered responses
+
+## Tech Stack
+- Vue
 - JavaScript
 - Node.js
 - Express
 - OpenAI API
-- HTML / CSS
+- HTML/CSS
+- localStorage
 
-## 🧠 What I Learned
-- Full-stack chatbot development
-- API integration (OpenAI)
-- State management with localStorage
-- Building interactive UI components
-- Prompt engineering for structured AI responses
-
-## ⚠️ Setup Instructions
-
+## Local Setup
 1. Clone repo
 2. Install dependencies:
 npm install
@@ -35,13 +49,4 @@ OPENAI_API_KEY=your_api_key_here
 npm start
 5. open in browser
 http://localhost:3000
-
-## Future Improvements:
-
-1. user authentication
-
-2. save progress to database
-
-3. deploy live version
-
-4. add analytics
+  
