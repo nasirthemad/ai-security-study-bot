@@ -1,5 +1,8 @@
 # AI Security+ Study Bot
 
+## Live Demo
+[View Live App](https://ai-security-study-bot.onrender.com/)
+
 <p align="center">
   <img src="https://img.shields.io/badge/Frontend-Vue-42b883?style=for-the-badge&logo=vuedotjs" />
   <img src="https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
