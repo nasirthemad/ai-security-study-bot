@@ -3,64 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Security+ Study Bot</title>
+  <title>AI Security+ Study Bot</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="chat-container">
-    <h1>Security+ Study Bot</h1>
-
-    <div class="top-bar">
-      <button id="clear-btn">Clear Chat</button>
+  <div id="app">
+    <div class="cyber-bg">
+      <div class="grid"></div>
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+      <div class="scanline"></div>
     </div>
 
-    <div class="mode-row">
-      <label for="mode-select">Mode:</label>
-      <select id="mode-select">
-        <option value="learn">Learn</option>
-        <option value="quiz">Quiz</option>
-        <option value="example">Example</option>
-        <option value="flashcards">Flashcards</option>
-      </select>
-    </div>
+    <div class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">AI SECURITY STUDY PLATFORM</p>
+          <h1>Security+ Study Bot</h1>
+          <p class="subtext">
+            Learn faster with guided explanations, quiz mode, flashcards, and interactive feedback.
+          </p>
+        </div>
+        <button class="clear-btn" @click="clearChat">Clear Chat</button>
+      </header>
 
-    <div id="score-board" class="score-board hidden">
-      <div>Total: <span id="score-total">0</span></div>
-      <div>Correct: <span id="score-correct">0</span></div>
-      <div>Wrong: <span id="score-wrong">0</span></div>
-    </div>
+      <section class="control-bar">
+        <label for="mode-select">Mode</label>
+        <select id="mode-select" v-model="mode">
+          <option value="learn">Learn</option>
+          <option value="quiz">Quiz</option>
+          <option value="example">Example</option>
+          <option value="flashcards">Flashcards</option>
+        </select>
+      </section>
 
-    <div id="quiz-panel" class="quiz-panel hidden">
-      <div class="quiz-panel-header">Active Quiz</div>
-      <div id="quiz-question" class="quiz-question">Your quiz question will appear here.</div>
-      <div id="quiz-answer-buttons" class="quiz-answer-buttons"></div>
-      <div id="quiz-feedback" class="quiz-feedback hidden"></div>
-    </div>
+      <section v-if="mode === 'quiz'" class="score-board">
+        <div class="stat-card">
+          <span>Total</span>
+          <strong>{{ quizScore.total }}</strong>
+        </div>
+        <div class="stat-card">
+          <span>Correct</span>
+          <strong>{{ quizScore.correct }}</strong>
+        </div>
+        <div class="stat-card">
+          <span>Wrong</span>
+          <strong>{{ quizScore.wrong }}</strong>
+        </div>
+      </section>
 
-    <div id="quiz-actions" class="quiz-actions hidden">
-      <button id="next-question-btn">Next Question</button>
-      <button id="show-explanation-btn">Show Explanation</button>
-    </div>
+      <section v-if="mode === 'quiz' && hasQuizPanel" class="quiz-panel">
+        <div class="quiz-panel-header">Active Quiz</div>
+        <div class="quiz-question">{{ quizState.questionText }}</div>
 
-    <div class="suggestions">
-      <button class="suggestion-btn" data-prompt="Explain this simply.">Explain Simply</button>
-      <button class="suggestion-btn" data-prompt="Quiz me on Security+.">Quiz Me</button>
-      <button class="suggestion-btn" data-prompt="Give me an example.">Give Example</button>
-      <button class="suggestion-btn" data-prompt="Go deeper on that.">Go Deeper</button>
-    </div>
+        <div v-if="quizState.awaitingAnswer" class="quiz-answer-buttons">
+          <button
+            v-for="choice in quizState.answerChoices"
+            :key="choice.letter"
+            class="answer-btn"
+            @click="handleQuizAnswer(choice.letter)"
+          >
+            {{ choice.letter }}. {{ choice.text }}
+          </button>
+        </div>
 
-    <div id="chat-box" class="chat-box"></div>
+        <div v-if="quizState.feedback" class="quiz-feedback">
+          {{ quizState.feedback }}
+        </div>
+      </section>
 
-    <div class="input-area">
-      <input
-        type="text"
-        id="user-input"
-        placeholder="Ask a Security+ question..."
-      />
-      <button id="send-btn">Send</button>
+      <section v-if="mode === 'quiz'" class="quiz-actions">
+        <button @click="nextQuestion" :disabled="quizState.awaitingAnswer">Next Question</button>
+        <button @click="showExplanation" :disabled="!quizState.canShowExplanation">Show Explanation</button>
+      </section>
+
+      <section class="suggestions">
+        <button @click="sendMessage('Explain this simply.')">Explain Simply</button>
+        <button @click="sendMessage('Quiz me on Security+.')">Quiz Me</button>
+        <button @click="sendMessage('Give me an example.')">Give Example</button>
+        <button @click="sendMessage('Go deeper on that.')">Go Deeper</button>
+      </section>
+
+      <section class="chat-box">
+        <div
+          v-for="(item, index) in chatHistory"
+          :key="index"
+          class="message"
+          :class="item.role === 'user' ? 'user' : 'bot'"
+        >
+          {{ item.content }}
+        </div>
+
+        <div v-if="isLoading" class="message bot">Typing...</div>
+      </section>
+
+      <section class="input-area">
+        <input
+          v-model="userInput"
+          @keydown.enter="sendMessage()"
+          :placeholder="inputPlaceholder"
+        />
+        <button @click="sendMessage()">Send</button>
+      </section>
     </div>
   </div>
 
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

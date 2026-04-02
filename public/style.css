@@ -1,205 +1,312 @@
+:root {
+  --bg: #061018;
+  --panel: rgba(10, 18, 30, 0.78);
+  --panel-2: rgba(15, 24, 38, 0.92);
+  --line: rgba(72, 187, 255, 0.18);
+  --text: #e6f3ff;
+  --muted: #8fb7d4;
+  --cyan: #35d6ff;
+  --cyan-2: #00a8ff;
+  --purple: #7c4dff;
+  --green: #38f2b0;
+  --danger: #ff5d7a;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  font-family: Inter, Arial, sans-serif;
+  background: radial-gradient(circle at top, #0b1b2f 0%, #040911 45%, #02060b 100%);
+  color: var(--text);
   min-height: 100vh;
 }
 
-.chat-container {
-  width: 460px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  padding: 20px;
+#app {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
-h1 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  text-align: center;
-  font-size: 24px;
+.cyber-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.top-bar {
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(53, 214, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(53, 214, 255, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, rgba(255,255,255,0.8), transparent);
+}
+
+.glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+
+.glow-1 {
+  width: 280px;
+  height: 280px;
+  background: var(--cyan);
+  top: 5%;
+  left: 8%;
+}
+
+.glow-2 {
+  width: 260px;
+  height: 260px;
+  background: var(--purple);
+  bottom: 10%;
+  right: 8%;
+}
+
+.scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(53,214,255,0.04) 50%, transparent 100%);
+  background-size: 100% 12px;
+  opacity: 0.2;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 2;
+  width: min(920px, calc(100% - 32px));
+  margin: 32px auto;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+.hero {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
 }
 
-.mode-row {
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+.subtext {
+  color: var(--muted);
+  max-width: 620px;
+  margin-top: 10px;
+  line-height: 1.55;
+}
+
+.clear-btn,
+.quiz-actions button,
+.suggestions button,
+.input-area button,
+.answer-btn {
+  border: 1px solid rgba(53, 214, 255, 0.25);
+  background: linear-gradient(180deg, rgba(24, 43, 68, 0.95), rgba(11, 22, 36, 0.95));
+  color: var(--text);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.clear-btn:hover,
+.quiz-actions button:hover,
+.suggestions button:hover,
+.input-area button:hover,
+.answer-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(53, 214, 255, 0.55);
+  box-shadow: 0 0 18px rgba(53, 214, 255, 0.12);
+}
+
+.control-bar,
+.score-board,
+.quiz-panel,
+.quiz-actions,
+.suggestions,
+.chat-box,
+.input-area {
+  margin-top: 14px;
+}
+
+.control-bar {
   display: flex;
+  gap: 12px;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
 }
 
-.mode-row label {
-  font-size: 14px;
-  font-weight: bold;
+.control-bar label {
+  color: var(--muted);
+  font-weight: 700;
 }
 
-#mode-select {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 14px;
+.control-bar select,
+.input-area input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(53, 214, 255, 0.18);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 14px 16px;
+  outline: none;
 }
 
 .score-board {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background: rgba(9, 18, 30, 0.95);
+  border: 1px solid rgba(53, 214, 255, 0.15);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.stat-card span {
+  display: block;
+  color: var(--muted);
   font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.stat-card strong {
+  font-size: 28px;
+  color: var(--cyan);
 }
 
 .quiz-panel {
-  margin-bottom: 12px;
-  padding: 14px;
-  border: 1px solid #dbeafe;
-  border-radius: 14px;
-  background: #f8fbff;
+  background: rgba(9, 18, 30, 0.95);
+  border: 1px solid rgba(53, 214, 255, 0.18);
+  border-radius: 18px;
+  padding: 16px;
 }
 
 .quiz-panel-header {
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 10px;
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  margin-bottom: 10px;
 }
 
 .quiz-question {
-  font-size: 15px;
-  line-height: 1.5;
-  margin-bottom: 12px;
-  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 14px;
 }
 
 .quiz-answer-buttons {
   display: grid;
-  grid-template-columns: 1fr;
   gap: 10px;
 }
 
 .answer-btn {
-  border: none;
-  padding: 12px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
   text-align: left;
-  background: #e0f2fe;
-  line-height: 1.4;
-}
-
-.answer-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  padding: 14px 16px;
+  line-height: 1.45;
 }
 
 .quiz-feedback {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  background: #eef2ff;
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(19, 34, 53, 0.95);
+  border: 1px solid rgba(53, 214, 255, 0.14);
+  border-radius: 14px;
+  color: #d9f6ff;
+  line-height: 1.5;
 }
 
-.quiz-actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.quiz-actions button {
-  flex: 1;
-  border: none;
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.hidden {
-  display: none;
-}
-
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.suggestion-btn {
-  border: none;
-  padding: 8px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 13px;
-  background: #eef2ff;
-}
-
-.chat-box {
-  height: 320px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fafafa;
-  margin-bottom: 12px;
-}
-
-.message {
-  max-width: 80%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  margin: 8px 0;
-  line-height: 1.4;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.user {
-  background: #dbeafe;
-  margin-left: auto;
-  text-align: right;
-}
-
-.bot {
-  background: #e5e7eb;
-  margin-right: auto;
-}
-
+.quiz-actions,
+.suggestions,
 .input-area {
   display: flex;
   gap: 10px;
 }
 
-#user-input {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 14px;
+.quiz-actions button,
+.suggestions button,
+.input-area button,
+.clear-btn {
+  padding: 12px 16px;
 }
 
-#send-btn,
-#clear-btn {
-  border: none;
-  padding: 12px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
+.suggestions {
+  flex-wrap: wrap;
+}
+
+.chat-box {
+  min-height: 300px;
+  max-height: 380px;
+  overflow-y: auto;
+  background: rgba(7, 15, 25, 0.92);
+  border: 1px solid rgba(53, 214, 255, 0.14);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.message {
+  max-width: 82%;
+  padding: 12px 14px;
+  margin: 8px 0;
+  border-radius: 16px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.message.user {
+  margin-left: auto;
+  background: linear-gradient(180deg, rgba(18, 77, 122, 0.95), rgba(11, 49, 80, 0.95));
+}
+
+.message.bot {
+  background: rgba(19, 34, 53, 0.95);
+  border: 1px solid rgba(53, 214, 255, 0.1);
+}
+
+.input-area input {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .hero,
+  .quiz-actions,
+  .input-area,
+  .control-bar {
+    flex-direction: column;
+  }
+
+  .score-board {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
 }
