@@ -75,47 +75,54 @@ createApp({
 },
 
   async mounted() {
-    try {
-      const response = await fetch("/config");
-      const config = await response.json();
+  try {
+    const response = await fetch("/config");
+    const config = await response.json();
 
-      this.supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+    console.log("CONFIG RESPONSE:", config);
 
-      const { data, error } = await this.supabaseClient.auth.getSession();
+    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+      this.authMessage = "Missing Supabase config from /config.";
+      return;
+    }
 
-      if (error) {
-        this.authMessage = error.message;
-      }
+    this.supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
 
-      this.user = data?.session?.user || null;
+    const { data, error } = await this.supabaseClient.auth.getSession();
+
+    if (error) {
+      this.authMessage = error.message;
+    }
+
+    this.user = data?.session?.user || null;
+
+    if (this.user) {
+      await this.loadUserProgress();
+    }
+
+    this.supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+      this.user = session?.user || null;
 
       if (this.user) {
         await this.loadUserProgress();
+      } else {
+        this.chatHistory = [];
+        this.quizScore = { total: 0, correct: 0, wrong: 0 };
+        this.quizState = {
+          awaitingAnswer: false,
+          correctAnswer: null,
+          questionText: "",
+          canShowExplanation: false,
+          answerChoices: [],
+          feedback: ""
+        };
       }
-
-      this.supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-  this.user = session?.user || null;
-
-  if (this.user) {
-    await this.loadUserProgress();
-  } else {
-    this.chatHistory = [];
-    this.quizScore = { total: 0, correct: 0, wrong: 0 };
-    this.quizState = {
-      awaitingAnswer: false,
-      correctAnswer: null,
-      questionText: "",
-      canShowExplanation: false,
-      answerChoices: [],
-      feedback: ""
-    };
+    });
+  } catch (error) {
+    console.error("MOUNT ERROR:", error);
+    this.authMessage = "Could not load auth configuration.";
   }
-});
-    } catch (error) {
-      console.error(error);
-      this.authMessage = "Could not load auth configuration.";
-    }
-  },
+},
 
   methods: {
     async loadUserProgress() {
@@ -169,28 +176,64 @@ createApp({
 },
 
     async signUp() {
-      this.authMessage = "";
+  try {
+    this.authMessage = "";
 
-      const { error } = await this.supabaseClient.auth.signUp({
-        email: this.authEmail,
-        password: this.authPassword
-      });
+    if (!this.supabaseClient) {
+      this.authMessage = "Supabase client is not loaded.";
+      return;
+    }
 
-      this.authMessage = error
-        ? error.message
-        : "Account created. Check your email if confirmation is required.";
-    },
+    if (!this.authEmail || !this.authPassword) {
+      this.authMessage = "Enter your email and password.";
+      return;
+    }
 
-    async signIn() {
-      this.authMessage = "";
+    const { data, error } = await this.supabaseClient.auth.signUp({
+      email: this.authEmail,
+      password: this.authPassword
+    });
 
-      const { error } = await this.supabaseClient.auth.signInWithPassword({
-        email: this.authEmail,
-        password: this.authPassword
-      });
+    console.log("SIGN UP DATA:", data);
+    console.log("SIGN UP ERROR:", error);
 
-      this.authMessage = error ? error.message : "Signed in successfully.";
-    },
+    this.authMessage = error
+      ? error.message
+      : "Account created. Check your email if confirmation is required.";
+  } catch (err) {
+    console.error("SIGN UP CRASH:", err);
+    this.authMessage = err.message || "Sign up failed.";
+  }
+},
+
+async signIn() {
+  try {
+    this.authMessage = "";
+
+    if (!this.supabaseClient) {
+      this.authMessage = "Supabase client is not loaded.";
+      return;
+    }
+
+    if (!this.authEmail || !this.authPassword) {
+      this.authMessage = "Enter your email and password.";
+      return;
+    }
+
+    const { data, error } = await this.supabaseClient.auth.signInWithPassword({
+      email: this.authEmail,
+      password: this.authPassword
+    });
+
+    console.log("SIGN IN DATA:", data);
+    console.log("SIGN IN ERROR:", error);
+
+    this.authMessage = error ? error.message : "Signed in successfully.";
+  } catch (err) {
+    console.error("SIGN IN CRASH:", err);
+    this.authMessage = err.message || "Sign in failed.";
+  }
+},
 
     async signOut() {
   await this.supabaseClient.auth.signOut();
