@@ -45,28 +45,34 @@ createApp({
   },
 
   watch: {
-    chatHistory: {
-      deep: true,
-      handler(value) {
-        localStorage.setItem("security_plus_synced_history", JSON.stringify(value));
-      }
-    },
-    quizScore: {
-      deep: true,
-      handler(value) {
-        localStorage.setItem("security_plus_quiz_score", JSON.stringify(value));
-      }
-    },
-    quizState: {
-      deep: true,
-      handler(value) {
-        localStorage.setItem("security_plus_quiz_state", JSON.stringify(value));
-      }
-    },
-    mode(value) {
-      localStorage.setItem("security_plus_mode", value);
+  chatHistory: {
+    deep: true,
+    async handler(value) {
+      localStorage.setItem("security_plus_synced_history", JSON.stringify(value));
+      await this.saveUserProgress();
     }
   },
+  quizScore: {
+    deep: true,
+    async handler(value) {
+      localStorage.setItem("security_plus_quiz_score", JSON.stringify(value));
+      await this.saveUserProgress();
+    }
+  },
+  quizState: {
+    deep: true,
+    async handler(value) {
+      localStorage.setItem("security_plus_quiz_state", JSON.stringify(value));
+      await this.saveUserProgress();
+    }
+  },
+  mode: {
+    async handler(value) {
+      localStorage.setItem("security_plus_mode", value);
+      await this.saveUserProgress();
+    }
+  }
+},
 
   async mounted() {
     try {
@@ -83,9 +89,28 @@ createApp({
 
       this.user = data?.session?.user || null;
 
-      this.supabaseClient.auth.onAuthStateChange((_event, session) => {
-        this.user = session?.user || null;
-      });
+      if (this.user) {
+        await this.loadUserProgress();
+      }
+
+      this.supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+  this.user = session?.user || null;
+
+  if (this.user) {
+    await this.loadUserProgress();
+  } else {
+    this.chatHistory = [];
+    this.quizScore = { total: 0, correct: 0, wrong: 0 };
+    this.quizState = {
+      awaitingAnswer: false,
+      correctAnswer: null,
+      questionText: "",
+      canShowExplanation: false,
+      answerChoices: [],
+      feedback: ""
+    };
+  }
+});
     } catch (error) {
       console.error(error);
       this.authMessage = "Could not load auth configuration.";
@@ -93,6 +118,56 @@ createApp({
   },
 
   methods: {
+    async loadUserProgress() {
+  if (!this.user || !this.supabaseClient) return;
+
+  const { data, error } = await this.supabaseClient
+    .from("user_progress")
+    .select("*")
+    .eq("user_id", this.user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Load progress error:", error.message);
+    return;
+  }
+
+  if (!data) return;
+
+  this.mode = data.mode || "learn";
+  this.chatHistory = Array.isArray(data.chat_history) ? data.chat_history : [];
+  this.quizScore = data.quiz_score || { total: 0, correct: 0, wrong: 0 };
+  this.quizState = data.quiz_state || {
+    awaitingAnswer: false,
+    correctAnswer: null,
+    questionText: "",
+    canShowExplanation: false,
+    answerChoices: [],
+    feedback: ""
+  };
+},
+
+    async saveUserProgress() {
+  if (!this.user || !this.supabaseClient) return;
+
+  const payload = {
+    user_id: this.user.id,
+    mode: this.mode,
+    chat_history: this.chatHistory,
+    quiz_score: this.quizScore,
+    quiz_state: this.quizState,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await this.supabaseClient
+    .from("user_progress")
+    .upsert(payload);
+
+  if (error) {
+    console.error("Save progress error:", error.message);
+  }
+},
+
     async signUp() {
       this.authMessage = "";
 
@@ -118,8 +193,19 @@ createApp({
     },
 
     async signOut() {
-      await this.supabaseClient.auth.signOut();
-    },
+  await this.supabaseClient.auth.signOut();
+
+  this.chatHistory = [];
+  this.quizScore = { total: 0, correct: 0, wrong: 0 };
+  this.quizState = {
+    awaitingAnswer: false,
+    correctAnswer: null,
+    questionText: "",
+    canShowExplanation: false,
+    answerChoices: [],
+    feedback: ""
+  };
+}
 
     addMessage(role, content) {
       this.chatHistory.push({ role, content });
