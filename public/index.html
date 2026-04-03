@@ -83,43 +83,48 @@
         </section>
 
         <section class="study-controls" v-if="user">
-          <div class="control-group">
-            <label for="mode-select">Mode</label>
-            <select id="mode-select" v-model="mode">
-              <option value="learn">Learn</option>
-              <option value="quiz">Quiz</option>
-              <option value="example">Example</option>
-              <option value="flashcards">Flashcards</option>
-              <option value="test">Test</option>
-            </select>
-          </div>
+  <div class="control-group">
+    <label for="mode-select">Mode</label>
+    <select id="mode-select" v-model="mode">
+      <option value="learn">Learn</option>
+      <option value="quiz">Quiz</option>
+      <option value="example">Example</option>
+      <option value="flashcards">Flashcards</option>
+      <option value="test">Test</option>
+    </select>
+  </div>
 
-          <div class="control-group" v-if="mode === 'quiz' || mode === 'test'">
-            <label for="difficulty-select">Difficulty</label>
-            <select id="difficulty-select" v-model="difficulty">
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
+  <div class="control-group" v-if="mode === 'quiz'">
+    <label for="difficulty-select">Difficulty</label>
+    <select id="difficulty-select" v-model="difficulty">
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
 
-          <div class="control-group" v-if="mode === 'quiz'">
-            <label for="unit-select">Unit</label>
-            <select id="unit-select" v-model="selectedUnit">
-              <option value="any">Any Unit</option>
-              <option value="1">Unit 1</option>
-              <option value="2">Unit 2</option>
-              <option value="3">Unit 3</option>
-              <option value="4">Unit 4</option>
-              <option value="5">Unit 5</option>
-            </select>
-          </div>
+  <div class="control-group" v-if="mode === 'quiz'">
+    <label for="domain-select">Domain</label>
+    <select id="domain-select" v-model="selectedDomain">
+      <option value="any">Any Domain</option>
+      <option value="1">Domain 1. General Security Concepts</option>
+      <option value="2">Domain 2. Threats, Vulnerabilities, and Mitigations</option>
+      <option value="3">Domain 3. Security Architecture</option>
+      <option value="4">Domain 4. Security Operations</option>
+      <option value="5">Domain 5. Security Program Management and Oversight</option>
+    </select>
+  </div>
 
-          <div class="control-group" v-if="mode === 'test'">
-            <label>Unit</label>
-            <div class="locked-value">Any Unit (Random)</div>
-          </div>
-        </section>
+  <div class="control-group" v-if="mode === 'test'">
+    <label>Difficulty</label>
+    <div class="locked-value">Hard</div>
+  </div>
+
+  <div class="control-group" v-if="mode === 'test'">
+    <label>Domain</label>
+    <div class="locked-value">Random (Domains 1–5)</div>
+  </div>
+</section>
 
         <section v-if="mode === 'quiz' || mode === 'test'" class="quiz-session-bar">
           <div class="stat-card">
