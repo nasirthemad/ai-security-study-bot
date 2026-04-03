@@ -1,8 +1,15 @@
-const { createApp, computed } = Vue;
+const { createApp } = Vue;
+const { createClient } = supabase;
 
 createApp({
   data() {
     return {
+      supabaseClient: null,
+      user: null,
+      authEmail: "",
+      authPassword: "",
+      authMessage: "",
+
       userInput: "",
       mode: localStorage.getItem("security_plus_mode") || "learn",
       isLoading: false,
@@ -61,7 +68,59 @@ createApp({
     }
   },
 
+  async mounted() {
+    try {
+      const response = await fetch("/config");
+      const config = await response.json();
+
+      this.supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+      const { data, error } = await this.supabaseClient.auth.getSession();
+
+      if (error) {
+        this.authMessage = error.message;
+      }
+
+      this.user = data?.session?.user || null;
+
+      this.supabaseClient.auth.onAuthStateChange((_event, session) => {
+        this.user = session?.user || null;
+      });
+    } catch (error) {
+      console.error(error);
+      this.authMessage = "Could not load auth configuration.";
+    }
+  },
+
   methods: {
+    async signUp() {
+      this.authMessage = "";
+
+      const { error } = await this.supabaseClient.auth.signUp({
+        email: this.authEmail,
+        password: this.authPassword
+      });
+
+      this.authMessage = error
+        ? error.message
+        : "Account created. Check your email if confirmation is required.";
+    },
+
+    async signIn() {
+      this.authMessage = "";
+
+      const { error } = await this.supabaseClient.auth.signInWithPassword({
+        email: this.authEmail,
+        password: this.authPassword
+      });
+
+      this.authMessage = error ? error.message : "Signed in successfully.";
+    },
+
+    async signOut() {
+      await this.supabaseClient.auth.signOut();
+    },
+
     addMessage(role, content) {
       this.chatHistory.push({ role, content });
       if (this.chatHistory.length > 20) {
@@ -187,6 +246,7 @@ Explain it simply and briefly first.`;
       const rawMessage = customMessage || this.userInput.trim();
       if (!rawMessage) return;
       if (this.mode === "quiz" && this.quizState.awaitingAnswer) return;
+      if (!this.user) return;
 
       this.userInput = "";
       await this.requestBotReply(rawMessage);
@@ -213,11 +273,13 @@ Explain it simply and briefly first.`;
     },
 
     async nextQuestion() {
+      if (!this.user) return;
       if (this.mode !== "quiz" || this.quizState.awaitingAnswer) return;
       await this.requestBotReply("Give me the next quiz question.", "quiz");
     },
 
     async showExplanation() {
+      if (!this.user) return;
       if (this.mode !== "quiz" || !this.quizState.canShowExplanation) return;
 
       const prompt = `Explain the last quiz question. The correct answer was ${this.quizState.correctAnswer}. Briefly explain why it is correct and why the other choices are less correct.`;

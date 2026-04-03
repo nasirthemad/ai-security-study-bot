@@ -16,99 +16,127 @@
     </div>
 
     <div class="app-shell">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">AI SECURITY STUDY PLATFORM</p>
-          <h1>Security+ Study Bot</h1>
-          <p class="subtext">
-            Learn faster with guided explanations, quiz mode, flashcards, and interactive feedback.
-          </p>
-        </div>
-        <button class="clear-btn" @click="clearChat">Clear Chat</button>
-      </header>
+      <section v-if="!user" class="auth-panel">
+        <p class="eyebrow">SECURE ACCESS</p>
+        <h2>Sign in to your study account</h2>
+        <p class="subtext">
+          Save your progress and access your study bot from anywhere.
+        </p>
 
-      <section class="control-bar">
-        <label for="mode-select">Mode</label>
-        <select id="mode-select" v-model="mode">
-          <option value="learn">Learn</option>
-          <option value="quiz">Quiz</option>
-          <option value="example">Example</option>
-          <option value="flashcards">Flashcards</option>
-        </select>
-      </section>
+        <div class="auth-form">
+          <input v-model="authEmail" type="email" placeholder="Email address" />
+          <input v-model="authPassword" type="password" placeholder="Password" />
 
-      <section v-if="mode === 'quiz'" class="score-board">
-        <div class="stat-card">
-          <span>Total</span>
-          <strong>{{ quizScore.total }}</strong>
-        </div>
-        <div class="stat-card">
-          <span>Correct</span>
-          <strong>{{ quizScore.correct }}</strong>
-        </div>
-        <div class="stat-card">
-          <span>Wrong</span>
-          <strong>{{ quizScore.wrong }}</strong>
+          <div class="auth-actions">
+            <button @click="signUp">Create Account</button>
+            <button @click="signIn">Sign In</button>
+          </div>
+
+          <p v-if="authMessage" class="auth-message">{{ authMessage }}</p>
         </div>
       </section>
 
-      <section v-if="mode === 'quiz' && hasQuizPanel" class="quiz-panel">
-        <div class="quiz-panel-header">Active Quiz</div>
-        <div class="quiz-question">{{ quizState.questionText }}</div>
+      <template v-else>
+        <header class="hero">
+          <div>
+            <p class="eyebrow">AI SECURITY STUDY PLATFORM</p>
+            <h1>Security+ Study Bot</h1>
+            <p class="subtext">
+              Learn faster with guided explanations, quiz mode, flashcards, and interactive feedback.
+            </p>
+            <p class="signed-in-as">Signed in as: {{ user.email }}</p>
+          </div>
 
-        <div v-if="quizState.awaitingAnswer" class="quiz-answer-buttons">
-          <button
-            v-for="choice in quizState.answerChoices"
-            :key="choice.letter"
-            class="answer-btn"
-            @click="handleQuizAnswer(choice.letter)"
+          <div class="top-right-actions">
+            <button class="clear-btn" @click="clearChat">Clear Chat</button>
+            <button class="clear-btn" @click="signOut">Sign Out</button>
+          </div>
+        </header>
+
+        <section class="control-bar">
+          <label for="mode-select">Mode</label>
+          <select id="mode-select" v-model="mode">
+            <option value="learn">Learn</option>
+            <option value="quiz">Quiz</option>
+            <option value="example">Example</option>
+            <option value="flashcards">Flashcards</option>
+          </select>
+        </section>
+
+        <section v-if="mode === 'quiz'" class="score-board">
+          <div class="stat-card">
+            <span>Total</span>
+            <strong>{{ quizScore.total }}</strong>
+          </div>
+          <div class="stat-card">
+            <span>Correct</span>
+            <strong>{{ quizScore.correct }}</strong>
+          </div>
+          <div class="stat-card">
+            <span>Wrong</span>
+            <strong>{{ quizScore.wrong }}</strong>
+          </div>
+        </section>
+
+        <section v-if="mode === 'quiz' && hasQuizPanel" class="quiz-panel">
+          <div class="quiz-panel-header">Active Quiz</div>
+          <div class="quiz-question">{{ quizState.questionText }}</div>
+
+          <div v-if="quizState.awaitingAnswer" class="quiz-answer-buttons">
+            <button
+              v-for="choice in quizState.answerChoices"
+              :key="choice.letter"
+              class="answer-btn"
+              @click="handleQuizAnswer(choice.letter)"
+            >
+              {{ choice.letter }}. {{ choice.text }}
+            </button>
+          </div>
+
+          <div v-if="quizState.feedback" class="quiz-feedback">
+            {{ quizState.feedback }}
+          </div>
+        </section>
+
+        <section v-if="mode === 'quiz'" class="quiz-actions">
+          <button @click="nextQuestion" :disabled="quizState.awaitingAnswer">Next Question</button>
+          <button @click="showExplanation" :disabled="!quizState.canShowExplanation">Show Explanation</button>
+        </section>
+
+        <section class="suggestions">
+          <button @click="sendMessage('Explain this simply.')">Explain Simply</button>
+          <button @click="sendMessage('Quiz me on Security+.')">Quiz Me</button>
+          <button @click="sendMessage('Give me an example.')">Give Example</button>
+          <button @click="sendMessage('Go deeper on that.')">Go Deeper</button>
+        </section>
+
+        <section class="chat-box">
+          <div
+            v-for="(item, index) in chatHistory"
+            :key="index"
+            class="message"
+            :class="item.role === 'user' ? 'user' : 'bot'"
           >
-            {{ choice.letter }}. {{ choice.text }}
-          </button>
-        </div>
+            {{ item.content }}
+          </div>
 
-        <div v-if="quizState.feedback" class="quiz-feedback">
-          {{ quizState.feedback }}
-        </div>
-      </section>
+          <div v-if="isLoading" class="message bot">Typing...</div>
+        </section>
 
-      <section v-if="mode === 'quiz'" class="quiz-actions">
-        <button @click="nextQuestion" :disabled="quizState.awaitingAnswer">Next Question</button>
-        <button @click="showExplanation" :disabled="!quizState.canShowExplanation">Show Explanation</button>
-      </section>
-
-      <section class="suggestions">
-        <button @click="sendMessage('Explain this simply.')">Explain Simply</button>
-        <button @click="sendMessage('Quiz me on Security+.')">Quiz Me</button>
-        <button @click="sendMessage('Give me an example.')">Give Example</button>
-        <button @click="sendMessage('Go deeper on that.')">Go Deeper</button>
-      </section>
-
-      <section class="chat-box">
-        <div
-          v-for="(item, index) in chatHistory"
-          :key="index"
-          class="message"
-          :class="item.role === 'user' ? 'user' : 'bot'"
-        >
-          {{ item.content }}
-        </div>
-
-        <div v-if="isLoading" class="message bot">Typing...</div>
-      </section>
-
-      <section class="input-area">
-        <input
-          v-model="userInput"
-          @keydown.enter="sendMessage()"
-          :placeholder="inputPlaceholder"
-        />
-        <button @click="sendMessage()">Send</button>
-      </section>
+        <section class="input-area">
+          <input
+            v-model="userInput"
+            @keydown.enter="sendMessage()"
+            :placeholder="inputPlaceholder"
+          />
+          <button @click="sendMessage()">Send</button>
+        </section>
+      </template>
     </div>
   </div>
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
 </html>
