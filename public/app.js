@@ -4,6 +4,25 @@ const { createClient } = supabase;
 createApp({
   data() {
     return {
+      difficulty: localStorage.getItem("security_plus_difficulty") || "medium",
+      selectedUnit: localStorage.getItem("security_plus_unit") || "any",
+
+      userStats: JSON.parse(localStorage.getItem("security_plus_user_stats") || JSON.stringify({
+        answered: 0,
+        correct: 0,
+        wrong: 0
+      })),
+
+      quizSession: JSON.parse(localStorage.getItem("security_plus_quiz_session") || JSON.stringify({
+      started: false,
+      totalMainQuestions: 15,
+      mainAnswered: 0,
+      isReviewPhase: false,
+      missedQuestions: [],
+      reviewQueue: [],
+      currentQuestionId: null
+    })),
+
       supabaseClient: null,
       user: null,
       authEmail: "",
@@ -27,6 +46,10 @@ createApp({
   },
 
   computed: {
+    accuracyPercent() {
+  if (!this.userStats.answered) return 0;
+  return Math.round((this.userStats.correct / this.userStats.answered) * 100);
+},
     hasQuizPanel() {
       return !!(
         this.quizState.questionText ||
@@ -45,6 +68,24 @@ createApp({
   },
 
   watch: {
+    difficulty(value) {
+  localStorage.setItem("security_plus_difficulty", value);
+},
+selectedUnit(value) {
+  localStorage.setItem("security_plus_unit", value);
+},
+userStats: {
+  deep: true,
+  handler(value) {
+    localStorage.setItem("security_plus_user_stats", JSON.stringify(value));
+  }
+},
+quizSession: {
+  deep: true,
+  handler(value) {
+    localStorage.setItem("security_plus_quiz_session", JSON.stringify(value));
+  }
+},
   chatHistory: {
     deep: true,
     async handler(value) {
@@ -125,6 +166,48 @@ createApp({
 },
 
   methods: {
+        startSession() {
+      this.quizSession = {
+        started: true,
+        totalMainQuestions: this.mode === "test" ? 90 : 15,
+        mainAnswered: 0,
+        isReviewPhase: false,
+        missedQuestions: [],
+        reviewQueue: [],
+        currentQuestionId: null
+      };
+
+      this.quizState = {
+        awaitingAnswer: false,
+        correctAnswer: null,
+        questionText: "",
+        canShowExplanation: false,
+        answerChoices: [],
+        feedback: ""
+      };
+
+      this.nextQuestion();
+    },
+
+    buildQuestionObject() {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        questionText: this.quizState.questionText,
+        answerChoices: JSON.parse(JSON.stringify(this.quizState.answerChoices)),
+        correctAnswer: this.quizState.correctAnswer
+      };
+    },
+
+    loadQuestionFromObject(questionObj) {
+      this.quizState.awaitingAnswer = true;
+      this.quizState.correctAnswer = questionObj.correctAnswer;
+      this.quizState.questionText = questionObj.questionText;
+      this.quizState.canShowExplanation = false;
+      this.quizState.answerChoices = JSON.parse(JSON.stringify(questionObj.answerChoices));
+      this.quizState.feedback = "";
+      this.quizSession.currentQuestionId = questionObj.id;
+    },
+    
     async loadUserProgress() {
   if (!this.user || !this.supabaseClient) return;
 
@@ -258,33 +341,56 @@ async signIn() {
     },
 
     buildModePrompt(message, mode) {
-      if (mode === "quiz") {
-        return `Mode: Quiz
+  if (mode === "quiz") {
+    const unitText = this.selectedUnit === "any"
+      ? "any of Units 1 through 5"
+      : `Unit ${this.selectedUnit}`;
+
+    return `Mode: Quiz
 User topic/request: ${message}
-Give 1 multiple-choice question at a time.
+Target Unit: ${unitText}
+Difficulty: ${this.difficulty}
+Generate exactly 1 CompTIA Security+ SY0-701 multiple-choice question.
+Make it ${this.difficulty}.
 Use exactly 4 answer choices labeled A., B., C., and D.
 Put each choice on its own line.
-End with ANSWER_KEY: X`;
-      }
+Keep the question aligned to ${unitText}.
+Do not give the explanation yet.
+End with: ANSWER_KEY: X`;
+  }
 
-      if (mode === "example") {
-        return `Mode: Example
+  if (mode === "test") {
+  this.difficulty = "hard"; // force hard
+    return `Mode: Test
+User topic/request: ${message}
+Target Unit: any unit from Units 1 through 5
+Difficulty: hard
+Generate exactly 1 CompTIA Security+ SY0-701 multiple-choice question.
+Make it as hard, technical, and exam-like as possible.
+Use exactly 4 answer choices labeled A., B., C., and D.
+Put each choice on its own line.
+Do not give the explanation yet.
+End with: ANSWER_KEY: X`;
+  }
+
+  if (mode === "example") {
+    return `Mode: Example
 User topic/request: ${message}
 Teach mainly through a simple real-world example. Keep it short first.`;
-      }
+  }
 
-      if (mode === "flashcards") {
-        return `Mode: Flashcards
+  if (mode === "flashcards") {
+    return `Mode: Flashcards
 User topic/request: ${message}
 Create 3 short flashcards in this format:
 Term:
 Definition:`;
-      }
+  }
 
-      return `Mode: Learn
+  return `Mode: Learn
 User topic/request: ${message}
 Explain it simply and briefly first.`;
-    },
+},
 
     parseQuizAnswerKey(botReply) {
       const match = botReply.match(/ANSWER_KEY:\s*([ABCD])/i);
@@ -345,24 +451,29 @@ Explain it simply and briefly first.`;
 
         const reply = data.reply || "Bot returned no text.";
 
-        if (mode === "quiz") {
+        if (mode === "quiz" || mode === "test") {
           const answerKey = this.parseQuizAnswerKey(reply);
           const answerChoices = this.parseQuizChoices(reply);
           const questionText = this.parseQuizQuestion(reply);
 
-          if (answerKey && answerChoices.length === 4) {
-            this.quizState.awaitingAnswer = true;
-            this.quizState.correctAnswer = answerKey;
-            this.quizState.questionText = questionText || "Quiz question";
-            this.quizState.canShowExplanation = false;
-            this.quizState.answerChoices = answerChoices;
-            this.quizState.feedback = "";
-          } else {
-            this.addMessage("assistant", "Could not format quiz question correctly.");
-          }
+        if (answerKey && answerChoices.length === 4) {
+          this.quizState.awaitingAnswer = true;
+          this.quizState.correctAnswer = answerKey;
+          this.quizState.questionText = questionText || "Quiz question";
+          this.quizState.canShowExplanation = false;
+          this.quizState.answerChoices = answerChoices;
+          this.quizState.feedback = "";
 
-          return;
-        }
+          const questionObj = this.buildQuestionObject();
+
+          this.quizSession.currentQuestion = questionObj;
+          this.quizSession.currentQuestionId = questionObj.id;
+  }     else {
+          this.addMessage("assistant", "Could not format quiz question correctly.");
+  }
+
+  return;
+}
 
         this.addMessage("assistant", reply);
       } catch (error) {
@@ -381,31 +492,137 @@ Explain it simply and briefly first.`;
       await this.requestBotReply(rawMessage);
     },
 
-    handleQuizAnswer(letter) {
-      if (!this.quizState.correctAnswer) return;
+    async handleQuizAnswer(letter) {
+  if (!this.quizState.correctAnswer) return;
 
-      this.quizScore.total += 1;
-      this.addMessage("user", `Selected answer: ${letter}`);
+  const selected = letter.toUpperCase();
+  const correct = this.quizState.correctAnswer;
 
-      if (letter === this.quizState.correctAnswer) {
-        this.quizScore.correct += 1;
-        this.quizState.feedback = `Correct. The right answer was ${this.quizState.correctAnswer}. You can click Next Question or Show Explanation.`;
-      } else {
-        this.quizScore.wrong += 1;
-        this.quizState.feedback = `Not quite. The correct answer was ${this.quizState.correctAnswer}. Click Show Explanation or Next Question.`;
-      }
+  this.userStats.answered += 1;
+  this.quizSession.mainAnswered += this.quizSession.isReviewPhase ? 0 : 1;
 
-      this.addMessage("assistant", this.quizState.feedback);
-      this.quizState.awaitingAnswer = false;
-      this.quizState.canShowExplanation = true;
-      this.quizState.answerChoices = [];
-    },
+  this.addMessage("user", `Selected answer: ${selected}`);
+
+  const currentQuestion = this.quizSession.currentQuestion;
+
+  let wasCorrect = selected === correct;
+
+  if (wasCorrect) {
+    this.userStats.correct += 1;
+  } else {
+    this.userStats.wrong += 1;
+
+    const alreadyTracked = this.quizSession.missedQuestions.some(
+      (q) => q.id === currentQuestion.id
+    );
+
+    if (!alreadyTracked) {
+      this.quizSession.missedQuestions.push(currentQuestion);
+    }
+  }
+
+  this.quizState.awaitingAnswer = false;
+  this.quizState.canShowExplanation = false;
+  this.quizState.answerChoices = [];
+
+  const choicesText = currentQuestion.answerChoices
+    .map((c) => `${c.letter}. ${c.text}`)
+    .join("\n");
+
+  const explanationPrompt = `Explain this Security+ question.
+
+Question:
+${currentQuestion.questionText}
+
+Choices:
+${choicesText}
+
+User selected: ${selected}
+Correct answer: ${correct}
+
+Respond in this format:
+
+CORRECTNESS:
+- State if the user was correct or incorrect
+
+EXPLANATION:
+- Deep technical explanation of the correct answer
+
+WHY OTHERS ARE WRONG:
+- Briefly explain why each incorrect option is wrong
+
+Keep it concise but high-level like a real exam explanation.
+
+Keep it clear but technical.`;
+
+  this.isLoading = true;
+
+  try {
+    const historyWithoutLatestUserMessage = this.chatHistory.slice();
+
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: explanationPrompt,
+        history: historyWithoutLatestUserMessage
+      })
+    });
+
+    const data = await response.json();
+    this.isLoading = false;
+
+    const explanation =
+      data.reply ||
+      (wasCorrect
+        ? `Correct. The right answer was ${correct}.`
+        : `Wrong. The correct answer was ${correct}.`);
+
+    this.quizState.feedback = explanation;
+    this.addMessage("assistant", explanation);
+  } catch (error) {
+    this.isLoading = false;
+    this.quizState.feedback = wasCorrect
+      ? `Correct. The right answer was ${correct}.`
+      : `Wrong. The correct answer was ${correct}.`;
+    this.addMessage("assistant", this.quizState.feedback);
+  }
+},
 
     async nextQuestion() {
-      if (!this.user) return;
-      if (this.mode !== "quiz" || this.quizState.awaitingAnswer) return;
-      await this.requestBotReply("Give me the next quiz question.", "quiz");
-    },
+  if (!this.user) return;
+  if (!this.quizSession.started) return;
+  if (this.quizState.awaitingAnswer) return;
+
+  if (
+    this.quizSession.mainAnswered >= this.quizSession.totalMainQuestions &&
+    !this.quizSession.isReviewPhase
+  ) {
+    this.quizSession.isReviewPhase = true;
+    this.quizSession.reviewQueue = [...this.quizSession.missedQuestions];
+  }
+
+  if (this.quizSession.isReviewPhase) {
+    if (this.quizSession.reviewQueue.length === 0) {
+      this.quizState.questionText = "Session complete. You finished all main and missed questions.";
+      this.quizState.answerChoices = [];
+      this.quizState.awaitingAnswer = false;
+      this.quizState.feedback = "Great work. Start a new session when you're ready.";
+      return;
+    }
+
+    const nextMissed = this.quizSession.reviewQueue.shift();
+    this.loadQuestionFromObject(nextMissed);
+    return;
+  }
+
+  const topicPrompt =
+    this.mode === "test"
+      ? "Give me the next question for the full random test."
+      : `Give me the next question for my ${this.selectedUnit === "any" ? "any-unit" : `Unit ${this.selectedUnit}`} quiz.`;
+
+  await this.requestBotReply(topicPrompt, this.mode);
+},
 
     async showExplanation() {
       if (!this.user) return;
@@ -447,6 +664,21 @@ Explain it simply and briefly first.`;
     },
 
     async clearChat() {
+      this.userStats = {
+          answered: 0,
+          correct: 0,
+          wrong: 0
+        };
+
+      this.quizSession = {
+        started: false,
+        totalMainQuestions: 15,
+        mainAnswered: 0,
+        isReviewPhase: false,
+        missedQuestions: [],
+        reviewQueue: [],
+        currentQuestionId: null
+      };
       this.chatHistory = [];
       this.quizScore = { total: 0, correct: 0, wrong: 0 };
       this.quizState = {

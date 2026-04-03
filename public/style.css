@@ -369,3 +369,56 @@ body {
   margin-top: 10px;
   font-size: 14px;
 }
+
+.dashboard-grid,
+.study-controls,
+.quiz-session-bar {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dashboard-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.study-controls {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.quiz-session-bar {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.control-group select,
+.locked-value {
+  border-radius: 14px;
+  border: 1px solid rgba(53, 214, 255, 0.18);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 14px 16px;
+}
+
+.locked-value {
+  opacity: 0.8;
+}
+
+@media (max-width: 720px) {
+  .dashboard-grid,
+  .study-controls,
+  .quiz-session-bar {
+    grid-template-columns: 1fr;
+  }
+}
