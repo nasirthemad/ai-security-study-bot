@@ -106,13 +106,18 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-app.post("/clear", (req, res) => {
-  res.json({ message: "Chat cleared." });
-});
+require("dotenv").config();
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static("public"));
+
+
 
 app.get("/config", (req, res) => {
   res.json({
@@ -121,6 +126,24 @@ app.get("/config", (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.post("/chat", async (req, res) => {
+  try {
+    const { message, history } = req.body;
+
+    
+    res.json({ reply: "Your bot response here" }); 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+
+app.post("/clear", (req, res) => {
+  res.json({ message: "Chat cleared" });
+});
+
+
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
 });
