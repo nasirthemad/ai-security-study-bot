@@ -82,7 +82,7 @@ body {
 .app-shell {
   position: relative;
   z-index: 2;
-  width: min(920px, calc(100% - 32px));
+  width: min(980px, calc(100% - 32px));
   margin: 32px auto;
   padding: 22px;
   border: 1px solid var(--line);
@@ -120,11 +120,23 @@ body {
   line-height: 1.55;
 }
 
+.signed-in-as {
+  color: var(--muted);
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.top-right-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .clear-btn,
 .quiz-actions button,
 .suggestions button,
 .input-area button,
-.answer-btn {
+.answer-btn,
+.auth-actions button {
   border: 1px solid rgba(53, 214, 255, 0.25);
   background: linear-gradient(180deg, rgba(24, 43, 68, 0.95), rgba(11, 22, 36, 0.95));
   color: var(--text);
@@ -137,7 +149,8 @@ body {
 .quiz-actions button:hover,
 .suggestions button:hover,
 .input-area button:hover,
-.answer-btn:hover {
+.answer-btn:hover,
+.auth-actions button:hover {
   transform: translateY(-1px);
   border-color: rgba(53, 214, 255, 0.55);
   box-shadow: 0 0 18px rgba(53, 214, 255, 0.12);
@@ -149,22 +162,34 @@ body {
 .quiz-actions,
 .suggestions,
 .chat-box,
-.input-area {
+.input-area,
+.dashboard-grid,
+.study-controls,
+.quiz-session-bar {
   margin-top: 14px;
 }
 
-.control-bar {
-  display: flex;
+.auth-panel {
+  background: rgba(9, 18, 30, 0.95);
+  border: 1px solid rgba(53, 214, 255, 0.18);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.auth-panel h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.auth-form {
+  display: grid;
   gap: 12px;
-  align-items: center;
+  margin-top: 18px;
 }
 
-.control-bar label {
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.control-bar select,
+.auth-form input,
+.control-group select,
+.locked-value,
 .input-area input {
   width: 100%;
   border-radius: 14px;
@@ -175,10 +200,54 @@ body {
   outline: none;
 }
 
-.score-board {
+.auth-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-actions button {
+  flex: 1;
+  padding: 12px 16px;
+}
+
+.auth-message {
+  color: var(--cyan);
+  margin: 0;
+}
+
+.dashboard-grid,
+.study-controls,
+.quiz-session-bar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+.dashboard-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.study-controls {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.quiz-session-bar {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.locked-value {
+  opacity: 0.8;
 }
 
 .stat-card {
@@ -220,6 +289,7 @@ body {
   font-size: 16px;
   line-height: 1.6;
   margin-bottom: 14px;
+  white-space: pre-wrap;
 }
 
 .quiz-answer-buttons {
@@ -241,6 +311,7 @@ body {
   border-radius: 14px;
   color: #d9f6ff;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .quiz-actions,
@@ -294,131 +365,35 @@ body {
   flex: 1;
 }
 
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .study-controls,
+  .quiz-session-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .hero,
   .quiz-actions,
   .input-area,
-  .control-bar {
+  .auth-actions {
     flex-direction: column;
   }
 
-  .score-board {
+  .dashboard-grid {
     grid-template-columns: 1fr;
   }
 
   .hero h1 {
     font-size: 30px;
   }
-}
 
-.auth-panel {
-  background: rgba(9, 18, 30, 0.95);
-  border: 1px solid rgba(53, 214, 255, 0.18);
-  border-radius: 20px;
-  padding: 24px;
-}
-
-.auth-panel h2 {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-.auth-form {
-  display: grid;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.auth-form input {
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(53, 214, 255, 0.18);
-  background: var(--panel-2);
-  color: var(--text);
-  padding: 14px 16px;
-  outline: none;
-}
-
-.auth-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.auth-actions button {
-  flex: 1;
-  border: 1px solid rgba(53, 214, 255, 0.25);
-  background: linear-gradient(180deg, rgba(24, 43, 68, 0.95), rgba(11, 22, 36, 0.95));
-  color: var(--text);
-  border-radius: 14px;
-  padding: 12px 16px;
-  cursor: pointer;
-}
-
-.auth-message {
-  color: var(--cyan);
-  margin: 0;
-}
-
-.top-right-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.signed-in-as {
-  color: var(--muted);
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.dashboard-grid,
-.study-controls,
-.quiz-session-bar {
-  display: grid;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.dashboard-grid {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.study-controls {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.quiz-session-bar {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.control-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.control-group label {
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.control-group select,
-.locked-value {
-  border-radius: 14px;
-  border: 1px solid rgba(53, 214, 255, 0.18);
-  background: var(--panel-2);
-  color: var(--text);
-  padding: 14px 16px;
-}
-
-.locked-value {
-  opacity: 0.8;
-}
-
-@media (max-width: 720px) {
-  .dashboard-grid,
-  .study-controls,
-  .quiz-session-bar {
-    grid-template-columns: 1fr;
+  .top-right-actions {
+    width: 100%;
+    flex-direction: column;
   }
 }

@@ -24,8 +24,16 @@
         </p>
 
         <div class="auth-form">
-          <input v-model="authEmail" type="email" placeholder="Email address" />
-          <input v-model="authPassword" type="password" placeholder="Password" />
+          <input
+            v-model="authEmail"
+            type="email"
+            placeholder="Email address"
+          />
+          <input
+            v-model="authPassword"
+            type="password"
+            placeholder="Password"
+          />
 
           <div class="auth-actions">
             <button @click="signUp">Create Account</button>
@@ -42,7 +50,8 @@
             <p class="eyebrow">AI SECURITY STUDY PLATFORM</p>
             <h1>Security+ Study Bot</h1>
             <p class="subtext">
-              Learn faster with guided explanations, quiz mode, flashcards, and interactive feedback.
+              Learn faster with guided explanations, interactive quizzes,
+              domain-based study, and technical test practice.
             </p>
             <p class="signed-in-as">Signed in as: {{ user.email }}</p>
           </div>
@@ -53,17 +62,7 @@
           </div>
         </header>
 
-        <section class="control-bar">
-          <label for="mode-select">Mode</label>
-          <select id="mode-select" v-model="mode">
-            <option value="learn">Learn</option>
-            <option value="quiz">Quiz</option>
-            <option value="example">Example</option>
-            <option value="flashcards">Flashcards</option>
-          </select>
-        </section>
-
-        <section v-if="user" class="dashboard-grid">
+        <section class="dashboard-grid">
           <div class="stat-card">
             <span>Answered</span>
             <strong>{{ userStats.answered }}</strong>
@@ -73,58 +72,58 @@
             <strong>{{ userStats.correct }}</strong>
           </div>
           <div class="stat-card">
+            <span>Wrong</span>
+            <strong>{{ userStats.wrong }}</strong>
+          </div>
+          <div class="stat-card">
             <span>Accuracy</span>
             <strong>{{ accuracyPercent }}%</strong>
           </div>
-          <div class="stat-card">
-            <span>Missed Left</span>
-            <strong>{{ quizSession.reviewQueue.length }}</strong>
-          </div>
         </section>
 
-        <section class="study-controls" v-if="user">
-  <div class="control-group">
-    <label for="mode-select">Mode</label>
-    <select id="mode-select" v-model="mode">
-      <option value="learn">Learn</option>
-      <option value="quiz">Quiz</option>
-      <option value="example">Example</option>
-      <option value="flashcards">Flashcards</option>
-      <option value="test">Test</option>
-    </select>
-  </div>
+        <section class="study-controls">
+          <div class="control-group">
+            <label for="mode-select">Mode</label>
+            <select id="mode-select" v-model="mode">
+              <option value="learn">Learn</option>
+              <option value="quiz">Quiz</option>
+              <option value="example">Example</option>
+              <option value="flashcards">Flashcards</option>
+              <option value="test">Test</option>
+            </select>
+          </div>
 
-  <div class="control-group" v-if="mode === 'quiz'">
-    <label for="difficulty-select">Difficulty</label>
-    <select id="difficulty-select" v-model="difficulty">
-      <option value="easy">Easy</option>
-      <option value="medium">Medium</option>
-      <option value="hard">Hard</option>
-    </select>
-  </div>
+          <div class="control-group" v-if="mode === 'quiz'">
+            <label for="difficulty-select">Difficulty</label>
+            <select id="difficulty-select" v-model="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
 
-  <div class="control-group" v-if="mode === 'quiz'">
-    <label for="domain-select">Domain</label>
-    <select id="domain-select" v-model="selectedDomain">
-      <option value="any">Any Domain</option>
-      <option value="1">Domain 1. General Security Concepts</option>
-      <option value="2">Domain 2. Threats, Vulnerabilities, and Mitigations</option>
-      <option value="3">Domain 3. Security Architecture</option>
-      <option value="4">Domain 4. Security Operations</option>
-      <option value="5">Domain 5. Security Program Management and Oversight</option>
-    </select>
-  </div>
+          <div class="control-group" v-if="mode === 'quiz'">
+            <label for="domain-select">Domain</label>
+            <select id="domain-select" v-model="selectedDomain">
+              <option value="any">Any Domain</option>
+              <option value="1">Domain 1. General Security Concepts</option>
+              <option value="2">Domain 2. Threats, Vulnerabilities, and Mitigations</option>
+              <option value="3">Domain 3. Security Architecture</option>
+              <option value="4">Domain 4. Security Operations</option>
+              <option value="5">Domain 5. Security Program Management and Oversight</option>
+            </select>
+          </div>
 
-  <div class="control-group" v-if="mode === 'test'">
-    <label>Difficulty</label>
-    <div class="locked-value">Hard</div>
-  </div>
+          <div class="control-group" v-if="mode === 'test'">
+            <label>Difficulty</label>
+            <div class="locked-value">Hard</div>
+          </div>
 
-  <div class="control-group" v-if="mode === 'test'">
-    <label>Domain</label>
-    <div class="locked-value">Random (Domains 1–5)</div>
-  </div>
-</section>
+          <div class="control-group" v-if="mode === 'test'">
+            <label>Domain</label>
+            <div class="locked-value">Random (Domains 1–5)</div>
+          </div>
+        </section>
 
         <section v-if="mode === 'quiz' || mode === 'test'" class="quiz-session-bar">
           <div class="stat-card">
@@ -135,27 +134,29 @@
             <span>Review Phase</span>
             <strong>{{ quizSession.isReviewPhase ? 'Yes' : 'No' }}</strong>
           </div>
-        </section>
-
-        <section v-if="mode === 'quiz'" class="score-board">
           <div class="stat-card">
-            <span>Total</span>
-            <strong>{{ quizScore.total }}</strong>
-          </div>
-          <div class="stat-card">
-            <span>Correct</span>
-            <strong>{{ quizScore.correct }}</strong>
-          </div>
-          <div class="stat-card">
-            <span>Wrong</span>
-            <strong>{{ quizScore.wrong }}</strong>
+            <span>Missed Left</span>
+            <strong>{{ quizSession.reviewQueue.length }}</strong>
           </div>
         </section>
 
-        <section v-if="mode === 'quiz' && hasQuizPanel" class="quiz-panel">
+        <section v-if="mode === 'quiz' || mode === 'test'" class="quiz-actions">
+          <button @click="startSession">
+            {{ mode === 'test' ? 'Start 90-Question Test' : 'Start 15-Question Quiz' }}
+          </button>
+          <button
+            @click="nextQuestion"
+            :disabled="quizState.awaitingAnswer || !quizSession.started"
+          >
+            Next Question
+          </button>
+        </section>
+
+        <section v-if="(mode === 'quiz' || mode === 'test') && hasQuizPanel" class="quiz-panel">
           <div class="quiz-panel-header">
-  {{ mode === 'test' ? 'Active Test Question' : 'Active Quiz Question' }}
-</div>
+            {{ mode === 'test' ? 'Active Test Question' : 'Active Quiz Question' }}
+          </div>
+
           <div class="quiz-question">{{ quizState.questionText }}</div>
 
           <div v-if="quizState.awaitingAnswer" class="quiz-answer-buttons">
@@ -173,15 +174,6 @@
             {{ quizState.feedback }}
           </div>
         </section>
-
-        <section v-if="mode === 'quiz' || mode === 'test'" class="quiz-actions">
-  <button @click="startSession">
-    {{ mode === 'test' ? 'Start 90-Question Test' : 'Start 15-Question Quiz' }}
-  </button>
-  <button @click="nextQuestion" :disabled="quizState.awaitingAnswer || !quizSession.started">
-    Next Question
-  </button>
-</section>
 
         <section class="suggestions">
           <button @click="sendMessage('Explain this simply.')">Explain Simply</button>
