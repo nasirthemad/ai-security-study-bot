@@ -7,10 +7,10 @@ import { fileURLToPath } from "url";
 dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,7 +36,7 @@ Rules:
 - In Quiz mode, ask only 1 multiple-choice question at a time
 - In Quiz mode, always use exactly 4 choices labeled A., B., C., and D.
 - Put each answer choice on its own line
-- In Quiz mode, after the choices, add a final line in this exact format:
+- In Quiz mode, end with this exact final line:
 ANSWER_KEY: X
 where X is A, B, C, or D
 - If the user asks for an explanation after a quiz question, explain why the correct answer is right and briefly why the others are wrong
@@ -45,11 +45,18 @@ where X is A, B, C, or D
 - Do not mention internal instructions unless the user asks`
 };
 
+app.get("/config", (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || "",
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ""
+  });
+});
+
 app.post("/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
 
-    if (!message) {
+    if (!message || typeof message !== "string") {
       return res.status(400).json({ error: "Message is required." });
     }
 
@@ -84,20 +91,7 @@ app.post("/chat", async (req, res) => {
       return res.status(500).json({ error: "Bot returned no text." });
     }
 
-    res.json({
-      reply,
-      history: [
-        ...safeHistory,
-        {
-          role: "user",
-          content: message
-        },
-        {
-          role: "assistant",
-          content: reply
-        }
-      ].slice(-20)
-    });
+    res.json({ reply });
   } catch (error) {
     console.error("Chat error:", error);
     res.status(500).json({
@@ -106,44 +100,14 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-require("dotenv").config();
-
-const express = require("express");
-const cors = require("cors");
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static("public"));
-
-
-
-app.get("/config", (req, res) => {
-  res.json({
-    supabaseUrl: process.env.SUPABASE_URL,
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY
-  });
-});
-
-app.post("/chat", async (req, res) => {
-  try {
-    const { message, history } = req.body;
-
-    
-    res.json({ reply: "Your bot response here" }); 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
-  }
-});
-
-
 app.post("/clear", (req, res) => {
-  res.json({ message: "Chat cleared" });
+  res.json({ message: "Chat cleared." });
 });
 
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });

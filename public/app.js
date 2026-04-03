@@ -248,7 +248,7 @@ async signIn() {
     answerChoices: [],
     feedback: ""
   };
-}
+},
 
     addMessage(role, content) {
       this.chatHistory.push({ role, content });
